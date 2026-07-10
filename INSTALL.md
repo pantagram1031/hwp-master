@@ -39,6 +39,9 @@ python -c "import fitz; print('pymupdf', fitz.__version__)"
 첫 실행 시 pyhwpx가 보안모듈을 자동 등록한다. 한글 프로세스가 떠 있으면 모두 종료 후 실행.
 `scripts/layout_qa.py`(레이아웃 수치 게이트)는 pymupdf(fitz)가 필요하다.
 
+설치 후 기능 범위는 [백엔드 기능표](references/capability_matrix.md), 반복되는
+문제의 원인과 복구법은 [문제 해결 지식베이스](docs/troubleshooting.md)를 확인한다.
+
 ## 1. Claude Code (Windows) — 권장 메인 환경
 ```powershell
 # 개인 스킬로 설치

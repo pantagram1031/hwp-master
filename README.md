@@ -55,6 +55,12 @@ python -m pytest -q
 개인 양식과 실제 보고서는 저장소에 포함하지 않는다. 선택적 실문서 회귀 테스트는
 `INSTALL.md`의 환경변수로 로컬 파일을 연결하며, 공개 CI에서는 합성 픽스처만 사용한다.
 
+실제 시행착오에서 일반화한 운영 지식은
+[문제 해결 지식베이스](docs/troubleshooting.md),
+[설계 결정](docs/design-decisions.md),
+[백엔드 기능표](references/capability_matrix.md)에 정리되어 있다. 개인 이름·양식·
+보고서 내용은 포함하지 않는다.
+
 ops.json 예시:
 ```json
 [

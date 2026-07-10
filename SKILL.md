@@ -184,4 +184,7 @@ ops 예시 (위에서 아래로 순차 실행):
 ## 5. 참고 문서
 - `references/hwpeqn_cheatsheet.md` — 한글 수식 스크립트 문법 전체
 - `references/com_api_reference.md` — pyhwpx/HAction 패턴 모음
+- `references/capability_matrix.md` — COM과 오프라인 HWPX 기능 차이
+- `docs/troubleshooting.md` — 반복 장애 signature, 원인, 수정, 검증
+- `docs/design-decisions.md` — 시행착오에서 고정된 엔진 설계 원칙
 - `INSTALL.md` — Claude Code / Codex / Cowork / claude.ai 배포 방법
