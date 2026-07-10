@@ -70,7 +70,7 @@ hwp.HAction.Execute("ShapeObjDialog", ps.HSet)
 ## 필드(누름틀) — 양식 보존 편집의 1순위
 ```python
 hwp.get_field_list()                 # 필드 목록
-hwp.put_field_text("성명", "이하율")
+hwp.put_field_text("성명", "홍길동")
 hwp.get_field_text("성명")
 hwp.fields_to_dict()                 # 전체 필드 → dict
 ```

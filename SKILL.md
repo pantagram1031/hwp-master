@@ -42,7 +42,7 @@ python SKILL_DIR/scripts/com_backend.py edit \
 ops 예시 (위에서 아래로 순차 실행):
 ```json
 [
-  {"op": "put_field", "name": "작성자", "value": "이하율"},
+  {"op": "put_field", "name": "작성자", "value": "홍길동"},
   {"op": "replace_all", "find": "{{날짜}}", "replace": "2026.06.11."},
   {"op": "goto_text", "text": "3. 실험 결과"},
   {"op": "move", "to": "line_end"},

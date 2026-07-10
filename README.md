@@ -1,5 +1,9 @@
 # hwp-master
 
+**Current workflow engine: v0.6.** It includes form inspection, deterministic
+bundle assembly, layout-plan checks, offline HWPX cleanup, fill/proof loops,
+contact sheets, format/style comparison, and the original COM editing backend.
+
 > 한글(HWP/HWPX) 문서를 AI 에이전트가 "사람처럼" 편집하게 하는 듀얼 백엔드 Agent Skill.
 > Claude Code · OpenAI Codex · Claude Cowork · claude.ai 공용.
 
@@ -18,7 +22,8 @@
 ## 빠른 시작 (Windows + 한컴오피스)
 
 ```powershell
-pip install pyhwpx pywin32
+python -m pip install ".[windows,test]"
+python scripts/doctor.py --require-com
 
 # 1) 문서 구조 파악
 python scripts/com_backend.py inspect --file 보고서.hwp
@@ -27,6 +32,23 @@ python scripts/com_backend.py inspect --file 보고서.hwp
 python scripts/com_backend.py edit --file 보고서.hwp --ops ops.json `
     --save-as 보고서_v2.hwpx --export-pdf verify.pdf
 ```
+
+## report-pipeline 연결
+
+`report-pipeline`의 Stage 0, 2.5, 5가 이 저장소의 v0.6 도구를 사용한다.
+두 저장소를 나란히 클론한 뒤 전체 연결을 확인할 수 있다.
+
+```powershell
+git clone https://github.com/pantagram1031/report-pipeline.git
+git clone https://github.com/pantagram1031/hwp-master.git
+cd hwp-master
+python -m pip install ".[windows,test]"
+python scripts/doctor.py --require-com --report-pipeline ..\report-pipeline
+python -m pytest -q
+```
+
+개인 양식과 실제 보고서는 저장소에 포함하지 않는다. 선택적 실문서 회귀 테스트는
+`INSTALL.md`의 환경변수로 로컬 파일을 연결하며, 공개 CI에서는 합성 픽스처만 사용한다.
 
 ops.json 예시:
 ```json
@@ -74,6 +96,7 @@ python scripts/eqn.py "\frac{-b \pm \sqrt{b^2-4ac}}{2a}"
 ## 요구 환경
 - COM 백엔드: Windows + 한컴오피스(한글 2020+, 2022 권장) + Python 3.11/3.12 + pyhwpx
 - eqn.py: Python 3.8+ (의존성 없음)
+- v0.6 전체 워크플로우: Python 3.10+, PyMuPDF, Pillow
 
 ## 알려진 한계
 - COM 백엔드는 한컴오피스 라이선스 필요, GUI 프로세스 기반이라 대량 배치엔 느릴 수 있음

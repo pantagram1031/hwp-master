@@ -1,5 +1,23 @@
 # 설치 및 배포 가이드 (Claude Code / Codex / Cowork / claude.ai)
 
+## 빠른 설치와 진단
+
+```powershell
+git clone https://github.com/pantagram1031/hwp-master.git
+cd hwp-master
+python -m pip install ".[windows,test]"
+python scripts/doctor.py --require-com
+python -m pytest -q
+```
+
+COM이 필요 없는 Linux/macOS CI 또는 오프라인 HWPX 검사만 설치할 때:
+
+```bash
+python -m pip install ".[test]"
+python scripts/doctor.py --json
+python -m pytest -q
+```
+
 ## 사전 준비 (Windows, COM 백엔드용)
 ```powershell
 # Python 3.12 권장 (한글 2022 기준 검증 환경)
@@ -57,10 +75,29 @@ hwp-master/
 ├── INSTALL.md                    # 이 문서
 ├── scripts/
 │   ├── com_backend.py            # Windows COM (inspect/edit/convert)
-│   └── eqn.py                    # LaTeX → HwpEqn (공용, 테스트 완료)
+│   ├── eqn.py                    # LaTeX → HwpEqn
+│   ├── form_inspect.py           # 양식/앵커/쪽 지표 추출
+│   ├── layout_plan_check.py      # 집필 전 cast-off 게이트
+│   ├── fill_report.py            # 조립·측정·proof 루프
+│   ├── tidy_hwpx.py              # 오프라인 HWPX 정리
+│   ├── contact_sheet.py          # 전체 PDF proof sheet
+│   └── doctor.py                 # 설치/의존성/연동 진단
 └── references/
     ├── hwpeqn_cheatsheet.md      # 한글 수식 문법
     └── com_api_reference.md      # pyhwpx/HAction 패턴
+```
+
+## 선택적 비공개 회귀 픽스처
+
+공개 저장소와 CI는 합성 픽스처만 사용한다. 실제 양식으로 추가 회귀 테스트를
+실행하려면 다음 환경변수만 로컬에서 설정한다. 파일은 Git에 추가하지 않는다.
+
+```powershell
+$env:HWP_MASTER_PRIVATE_FIXTURES="C:\private\hwp-fixtures"
+$env:HWP_MASTER_FORM_FIXTURE="C:\private\form.hwpx"
+$env:HWP_MASTER_OUTPUT_FIXTURE="C:\private\out.hwpx"
+$env:HWP_MASTER_ASSEMBLED_FIXTURE="C:\private\out.hwpx"
+$env:HWP_MASTER_LAYOUT_FIXTURES="C:\private\layout-pdfs"
 ```
 
 ## 첫 스모크 테스트 (Windows에서)

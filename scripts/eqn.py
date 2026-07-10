@@ -158,6 +158,20 @@ def _read_arg(s, i):
 # 구조 변환 (재귀)
 # ---------------------------------------------------------------------------
 
+def _matrix_rowsep(body):
+    """행렬/케이스 환경 본문의 행 구분 백슬래시를 ' # '로 바꾼다.
+
+    LaTeX 행 구분은 '\\\\'(백슬래시 둘)이지만, 셸/JSON 이스케이프를 거치면
+    홑 '\\'로 줄어든 채 들어오기도 한다. 두 경우 모두 처리하되 '\\alpha'처럼
+    문자로 이어지는 명령은 건드리지 않는다:
+      - '\\\\'(둘 이상 연속) -> 행 구분
+      - 홑 '\\' 뒤가 공백/문자열끝/'&' -> 행 구분 (명령이 아님)
+    """
+    body = re.sub(r"\\{2,}", " # ", body)          # \\ (LaTeX 표준)
+    body = re.sub(r"\\(?=\s|$|&)", " # ", body)     # 이스케이프로 남은 홑 \
+    return body
+
+
 def _convert_structures(s, warnings):
     """\\frac, \\sqrt, \\text, 장식, 행렬 환경 등 인자를 갖는 구조를 변환."""
     out = []
@@ -224,10 +238,12 @@ def _convert_structures(s, warnings):
             hwp_env = MATRIX_ENVS.get(env)
             if hwp_env is None:
                 warnings.append(f"지원하지 않는 환경: {env} (내용만 변환)")
-                out.append(_convert_structures(body, warnings))
+                out.append(_convert_structures(_matrix_rowsep(body), warnings))
             else:
-                body = _convert_structures(body, warnings)
-                body = body.replace("\\\\", " # ")  # 행 구분
+                # 행 구분(\\ 또는 셸/JSON 이스케이프로 하나 남은 \)을 먼저
+                # 센티널로 바꾼 뒤 재귀 변환한다. 재귀 전에 처리해야 홑
+                # 백슬래시가 명령으로 오인되지 않는다.
+                body = _convert_structures(_matrix_rowsep(body), warnings)
                 out.append("%s{%s}" % (hwp_env, body.strip()))
             i = k + len(end_tag)
         elif cmd in ("left", "right"):
@@ -260,8 +276,31 @@ def latex_to_hwpeqn(latex):
 
     # 0) 이중 백슬래시 정규화: LLM이 만든 번들은 latex 속성을 흔히 이중 escape한다
     #    (예: "\\frac", "\\left", "\\!"). 명령/공백 토큰 앞의 여분 백슬래시를 하나로
-    #    접는다. 행렬 행구분 "\\"(뒤가 letter/스페이싱이 아님)는 건드리지 않는다.
+    #    접는다.
+    #
+    #    행렬류 환경(pmatrix/bmatrix/cases/aligned/...) 본문은 이 정규화에서
+    #    반드시 제외해야 한다: 행 구분자 "\\"(둘) 바로 뒤에 다음 셀 값이 문자로
+    #    시작하면(예: "a&b\\c&d"의 "\\c") 이 lookahead가 "\\\\c" -> "\\c"로 접어,
+    #    _matrix_rowsep()이 실행되기 전에 행 구분자를 명령처럼 보이는 잔여
+    #    단일 백슬래시로 무너뜨려 버린다(_matrix_rowsep은 구조 변환 단계에서
+    #    나중에 실행됨 — 이미 늦음). 그래서 \begin{ENV}...\end{ENV} 블록은
+    #    통째로 보호(센티널로 치환)한 뒤 바깥쪽만 de-escape하고, 나중에
+    #    원문 그대로 복원해 _convert_structures/_matrix_rowsep이 원본 "\\"를
+    #    보게 한다.
+    _protected = []
+
+    def _protect_env(m):
+        _protected.append(m.group(0))
+        return f"\x00PROTECTED{len(_protected) - 1}\x00"
+
+    _env_names = "|".join(re.escape(e) for e in MATRIX_ENVS)
+    s = re.sub(r"\\begin\{(?:" + _env_names + r")\}.*?\\end\{(?:" + _env_names + r")\}",
+               _protect_env, s, flags=re.S)
+
     s = re.sub(r"\\{2,}(?=[A-Za-z!,;:])", "\\\\", s)
+
+    for idx, chunk in enumerate(_protected):
+        s = s.replace(f"\x00PROTECTED{idx}\x00", chunk)
 
     # 1) 구조(인자 있는 명령) 변환
     s = _convert_structures(s, warnings)
@@ -288,8 +327,15 @@ def latex_to_hwpeqn(latex):
     return s, warnings
 
 
+# HwpEqn이 처리하지 못하는 것으로 알려진 LaTeX 잔여 토큰. 출력에 남아 있으면
+# 한글 수식 편집기에서 깨지므로 sanity check를 FAIL 시킨다.
+UNSUPPORTED_TOKENS = (
+    "binom", "mathbb", "boxed", "overrightarrow", "substack",
+)
+
+
 def hwpeqn_sanity_check(script):
-    """HwpEqn 스크립트의 기초 무결성 검사 (중괄호 균형 등)."""
+    """HwpEqn 스크립트의 기초 무결성 검사 (중괄호 균형, 미변환 토큰 등)."""
     depth = 0
     for ch in script:
         if ch == "{":
@@ -302,6 +348,12 @@ def hwpeqn_sanity_check(script):
         return False, f"중괄호 불균형 (깊이 {depth})"
     if script.count('"') % 2 != 0:
         return False, "리터럴 따옴표 불균형"
+    # 미변환 행 구분/명령 백슬래시가 남아 있으면 한글에서 깨진다.
+    if "\\" in script:
+        return False, "미변환 백슬래시 잔여 (행 구분 \\\\ 등)"
+    for tok in UNSUPPORTED_TOKENS:
+        if tok in script:
+            return False, f"HwpEqn 미지원 토큰: {tok}"
     return True, "ok"
 
 
