@@ -55,7 +55,7 @@
       "op": "insert_equation",
       "base_pt": 11,
       "display": true,
-      "hwpeqn": "K ={1}over{2}mv^2"
+      "hwpeqn": "K ={1}over{2}mv^{2}"
     },
     {
       "op": "insert_text",
@@ -79,7 +79,7 @@
       "op": "insert_equation",
       "base_pt": 11,
       "display": true,
-      "hwpeqn": "r = 1 - left ( 1 -{T}over{T_0}right )^2"
+      "hwpeqn": "r = 1 - left ( 1 -{T}over{T_{0}}right )^{2}"
     },
     {
       "op": "insert_blank_before",

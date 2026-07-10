@@ -18,6 +18,7 @@ HWPX plus exported PDF.
 | T10 | A section moves onto the previous page after cleanup | The form used blank paragraphs as implicit page pushers | Add an explicit `page_break_before` rule for the frozen heading anchor | Inspect page starts after tidy |
 | T11 | A table caption is orphaned at a page bottom | Caption lacks keep-with-next behavior | Apply `keepWithNext=1` to declared caption prefixes | Inspect the caption/table page pair |
 | T12 | A batch stops after partially editing the document | Invalid operation was discovered during execution | Validate the complete ops payload before opening Hancom | Confirm invalid batches fail with no output mutation |
+| T13 | An inline superscript or subscript absorbs following punctuation and terms | HwpEqn scopes an unbraced script to the next space, unlike LaTeX's single-atom rule | Let `eqn.py` brace bare atoms and author multi-atom scripts explicitly, such as `x^{2}` and `D_{pq'-qp'}` | Inspect every affected equation at high resolution, not only a page thumbnail |
 
 ## COM session hangs
 

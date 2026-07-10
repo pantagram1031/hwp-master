@@ -264,6 +264,39 @@ def _convert_structures(s, warnings):
     return "".join(out)
 
 
+def _brace_scripts(s):
+    """Wrap bare single-atom scripts so HwpEqn cannot over-consume them.
+
+    HwpEqn treats an unbraced ``^`` or ``_`` operand as the complete token up
+    to the next space. LaTeX instead applies a bare script to one following
+    atom. Preserve the LaTeX meaning by turning ``x^2`` into ``x^{2}`` and
+    ``D_p`` into ``D_{p}``; existing groups remain unchanged.
+    """
+    out = []
+    i, n = 0, len(s)
+    while i < n:
+        char = s[i]
+        out.append(char)
+        if char in "^_":
+            j = i + 1
+            while j < n and s[j] == " ":
+                j += 1
+            if j >= n or s[j] == "{":
+                i += 1
+                continue
+            if s[j] == "\\":
+                match = re.match(r"\\([a-zA-Z]+\*?|.)", s[j:])
+                atom = match.group(0)
+                out.append("{" + atom + "}")
+                i = j + len(atom)
+                continue
+            out.append("{" + s[j] + "}")
+            i = j + 1
+            continue
+        i += 1
+    return "".join(out)
+
+
 def latex_to_hwpeqn(latex):
     """LaTeX 수식 문자열을 HwpEqn 스크립트로 변환.
 
@@ -304,6 +337,9 @@ def latex_to_hwpeqn(latex):
 
     # 1) 구조(인자 있는 명령) 변환
     s = _convert_structures(s, warnings)
+
+    # 1.5) Match LaTeX single-atom script scope before HwpEqn tokenization.
+    s = _brace_scripts(s)
 
     # 2) 그리스 문자 (백슬래시 제거)
     for g in sorted(GREEK, key=len, reverse=True):

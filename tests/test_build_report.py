@@ -1201,7 +1201,7 @@ _GOLDEN_EXPECTED_OPS = [
     {"op": "insert_text", "text": "", "pt": 10, "break_after": True},
     {"op": "insert_text", "text": "수식은 인라인으로 낀다.", "pt": 10, "break_after": True},
     {"op": "insert_equation", "base_pt": 10, "display": False,
-     "hwpeqn": "E = mc^2"},
+     "hwpeqn": "E = mc^{2}"},
     {"op": "insert_text", "text": "여기까지.", "pt": 10, "break_after": True},
 ]
 
