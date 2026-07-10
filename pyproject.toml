@@ -4,10 +4,11 @@ version = "0.6.0"
 description = "Deterministic HWP/HWPX inspection, assembly, typesetting, and proof tools"
 requires-python = ">=3.10"
 license = {text = "MIT"}
-dependencies = ["PyMuPDF>=1.23", "Pillow>=10"]
+dependencies = []
 
 [project.optional-dependencies]
 windows = ["pyhwpx", "pywin32"]
+proof = ["PyMuPDF>=1.23", "Pillow>=10"]
 test = ["pytest>=8"]
 
 [tool.setuptools]

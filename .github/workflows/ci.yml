@@ -13,7 +13,7 @@ jobs:
         with:
           python-version: "3.11"
       - run: python -m pip install --upgrade pip
-      - run: python -m pip install ".[test]"
+      - run: python -m pip install ".[proof,test]"
       - run: python scripts/doctor.py --json
       - run: python -m pytest -q
       - run: python -m py_compile scripts/*.py

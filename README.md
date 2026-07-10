@@ -21,9 +21,14 @@ contact sheets, format/style comparison, and the original COM editing backend.
 
 ## 빠른 시작 (Windows + 한컴오피스)
 
+> **필수 로컬 프로그램:** 이 워크플로우의 `.hwp` 직접 편집, 양식 완전 보존,
+> PDF 내보내기 기능은 Windows PC에 정식 데스크톱 **한컴오피스 한글**이 설치되어
+> 있어야 작동한다. 저장소나 Python 패키지만 설치해서는 해당 기능을 사용할 수 없다.
+> 웹 한컴독스나 `.hwpx` 파일만으로는 COM 편집 백엔드를 대체할 수 없다.
+
 ```powershell
-python -m pip install ".[windows,test]"
-python scripts/doctor.py --require-com
+python -m pip install ".[windows,proof,test]"
+python scripts/doctor.py --require-com --require-proof
 
 # 1) 문서 구조 파악
 python scripts/com_backend.py inspect --file 보고서.hwp
@@ -42,8 +47,8 @@ python scripts/com_backend.py edit --file 보고서.hwp --ops ops.json `
 git clone https://github.com/pantagram1031/report-pipeline.git
 git clone https://github.com/pantagram1031/hwp-master.git
 cd hwp-master
-python -m pip install ".[windows,test]"
-python scripts/doctor.py --require-com --report-pipeline ..\report-pipeline
+python -m pip install ".[windows,proof,test]"
+python scripts/doctor.py --require-com --require-proof --report-pipeline ..\report-pipeline
 python -m pytest -q
 ```
 
@@ -96,7 +101,9 @@ python scripts/eqn.py "\frac{-b \pm \sqrt{b^2-4ac}}{2a}"
 ## 요구 환경
 - COM 백엔드: Windows + 한컴오피스(한글 2020+, 2022 권장) + Python 3.11/3.12 + pyhwpx
 - eqn.py: Python 3.8+ (의존성 없음)
-- v0.6 전체 워크플로우: Python 3.10+, PyMuPDF, Pillow
+- 핵심/XML 도구: Python 3.10+만 필요 (`pip install .`, 외부 Python 패키지 없음)
+- 로컬 `.hwp` 편집: Windows + 설치된 한컴오피스 한글 + `.[windows]`
+- PDF proof/contact sheet: 선택 기능 `.[proof]` (PyMuPDF, Pillow)
 
 ## 알려진 한계
 - COM 백엔드는 한컴오피스 라이선스 필요, GUI 프로세스 기반이라 대량 배치엔 느릴 수 있음

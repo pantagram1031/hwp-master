@@ -23,7 +23,25 @@ def _module_check(name: str, required: bool) -> dict:
     return {"name": name, "ok": available or not required, "available": available, "required": required}
 
 
-def collect_checks(require_com: bool = False, report_pipeline: Path | None = None) -> dict:
+def _hancom_check() -> dict:
+    """Detect a locally installed Hancom HWP COM server without launching it."""
+    if sys.platform != "win32":
+        return {"ok": False, "installed": False, "required": False, "detail": "Windows only"}
+    try:
+        import winreg
+
+        for prog_id in ("HWPFrame.HwpObject", "HWPFrame.HwpObject.2"):
+            try:
+                with winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, prog_id):
+                    return {"ok": True, "installed": True, "required": False, "detail": prog_id}
+            except FileNotFoundError:
+                continue
+    except OSError as exc:
+        return {"ok": False, "installed": False, "required": False, "detail": str(exc)}
+    return {"ok": False, "installed": False, "required": False, "detail": "HWP COM registration not found"}
+
+
+def collect_checks(require_com: bool = False, require_proof: bool = False, report_pipeline: Path | None = None) -> dict:
     scripts = []
     for name in REQUIRED_SCRIPTS:
         path = ROOT / "scripts" / name
@@ -31,11 +49,14 @@ def collect_checks(require_com: bool = False, report_pipeline: Path | None = Non
 
     windows = sys.platform == "win32"
     modules = [
-        _module_check("fitz", True),
-        _module_check("PIL", True),
+        _module_check("fitz", require_proof),
+        _module_check("PIL", require_proof),
         _module_check("pyhwpx", require_com),
         _module_check("win32com", require_com),
     ]
+    hancom = _hancom_check()
+    hancom["required"] = require_com
+    hancom["ok"] = hancom["installed"] or not require_com
     pipeline_check = None
     if report_pipeline is not None:
         expected = report_pipeline.resolve() / "pipeline" / "scripts" / "pipeline_ctl.py"
@@ -47,7 +68,7 @@ def collect_checks(require_com: bool = False, report_pipeline: Path | None = Non
     if pipeline_check is not None:
         checks_ok = checks_ok and pipeline_check["ok"]
     if require_com:
-        checks_ok = checks_ok and com_ready
+        checks_ok = checks_ok and com_ready and hancom["installed"]
 
     return {
         "ok": checks_ok,
@@ -55,6 +76,7 @@ def collect_checks(require_com: bool = False, report_pipeline: Path | None = Non
         "platform": {"system": platform.system(), "win32": windows},
         "scripts": scripts,
         "modules": modules,
+        "hancom_hwp": hancom,
         "com_ready": com_ready,
         "report_pipeline": pipeline_check,
     }
@@ -63,16 +85,19 @@ def collect_checks(require_com: bool = False, report_pipeline: Path | None = Non
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--require-com", action="store_true", help="fail unless Windows COM dependencies are installed")
+    parser.add_argument("--require-proof", action="store_true", help="fail unless optional PDF proof dependencies are installed")
     parser.add_argument("--report-pipeline", type=Path, help="also verify a report-pipeline checkout")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
-    result = collect_checks(args.require_com, args.report_pipeline)
+    result = collect_checks(args.require_com, args.require_proof, args.report_pipeline)
     if args.json:
         print(json.dumps(result, ensure_ascii=False, indent=2))
     else:
         print(f"hwp-master doctor: {'PASS' if result['ok'] else 'FAIL'}")
         print(f"Python {result['python']['version']}: {'ok' if result['python']['ok'] else '3.10+ required'}")
         print(f"Platform: {result['platform']['system']} (COM ready: {result['com_ready']})")
+        hancom = result["hancom_hwp"]
+        print(f"Hancom HWP: {'installed' if hancom['installed'] else 'not detected'} ({hancom['detail']})")
         for item in result["modules"]:
             state = "ok" if item["available"] else "missing"
             suffix = " (required)" if item["required"] else " (optional)"

@@ -2,11 +2,15 @@
 
 ## 빠른 설치와 진단
 
+`.hwp`를 직접 편집하는 전체 워크플로우에는 **Windows에 로컬 데스크톱
+한컴오피스 한글이 먼저 설치되어 있어야 한다.** 이 저장소는 한컴오피스나 그
+라이선스를 포함·설치하지 않는다. 한컴독스 웹 버전만으로는 COM 백엔드를 실행할 수 없다.
+
 ```powershell
 git clone https://github.com/pantagram1031/hwp-master.git
 cd hwp-master
-python -m pip install ".[windows,test]"
-python scripts/doctor.py --require-com
+python -m pip install ".[windows,proof,test]"
+python scripts/doctor.py --require-com --require-proof
 python -m pytest -q
 ```
 
@@ -15,8 +19,10 @@ COM이 필요 없는 Linux/macOS CI 또는 오프라인 HWPX 검사만 설치할
 ```bash
 python -m pip install ".[test]"
 python scripts/doctor.py --json
-python -m pytest -q
 ```
+
+위 최소 설치는 외부 런타임 패키지 없이 핵심/XML 명령만 준비한다. PDF proof가
+필요하면 `python -m pip install ".[proof]"`를 추가한다.
 
 ## 사전 준비 (Windows, COM 백엔드용)
 ```powershell
