@@ -1,3 +1,8 @@
+> **⚠️ ABSORBED (2026-08-06):** This repository has been absorbed into
+> [rigorloom](https://github.com/pantagram1031/rigorloom) as its core engine
+> (`engine/`), history-preserving (v0.1–v0.3 tags are ancestors of rigorloom
+> main). All development continues there. This repo is archived read-only.
+
 # hwp-master
 
 > 한글(HWP/HWPX) 문서를 AI 에이전트가 "사람처럼" 편집하게 하는 듀얼 백엔드 Agent Skill.
